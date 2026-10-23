@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Absensi & Portfolio Informatika</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- HTML5-QRCode Generator & Scanner -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- XLSX Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- jsPDF Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans">
+
+  <!-- LOGIN CONTAINER -->
+  <div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
+      <div class="text-center mb-6">
+        <div class="bg-indigo-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+          <i class="fa-solid fa-laptop-code text-2xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">Absensi Informatika</h2>
+        <p class="text-slate-500 text-sm">Masuk sebagai Guru Mata Pelajaran</p>
+      </div>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1">Username</label>
+          <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="guru" required>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1">Password</label>
+          <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="admin123" required>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-bold transition duration-200">
+          <i class="fa-solid fa-right-to-bracket mr-2"></i> Log In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP (HIDDEN BEFORE LOGIN) -->
+  <div id="appSection" class="hidden min-h-screen flex flex-col md:flex-row">
+    
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-64 bg-slate-900 text-white flex flex-col justify-between">
+      <div>
+        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+          <i class="fa-solid fa-microchip text-indigo-400 text-2xl"></i>
+          <span class="font-bold text-lg">Informatika Hub</span>
+        </div>
+        <nav class="p-4 space-y-1">
+          <button onclick="showPage('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left active-nav"><i class="fa-solid fa-chart-pie text-indigo-400"></i> Dashboard</button>
+          <button onclick="showPage('scanner')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left"><i class="fa-solid fa-qrcode text-indigo-400"></i> Scan QR Absensi</button>
+          <button onclick="showPage('absensi')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left"><i class="fa-solid fa-clipboard-user text-indigo-400"></i> Rekap / Edit Absensi</button>
+          <button onclick="showPage('siswa')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left"><i class="fa-solid fa-users text-indigo-400"></i> Kelola Siswa</button>
+          <button onclick="showPage('qrgenerator')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left"><i class="fa-solid fa-id-card text-indigo-400"></i> Barcode Siswa</button>
+          <button onclick="showPage('materi')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left"><i class="fa-solid fa-book-open text-indigo-400"></i> Materi Pembelajaran</button>
+          <button onclick="showPage('nilai')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 text-left"><i class="fa-solid fa-graduation-cap text-indigo-400"></i> Nilai Ulangan & Ujian</button>
+        </nav>
+      </div>
+      <div class="p-4 border-t border-slate-800">
+        <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-1 p-6 overflow-y-auto">
+
+      <!-- 1. DASHBOARD PAGE -->
+      <div id="page-dashboard" class="page-content space-y-6">
+        <h1 class="text-2xl font-bold">Dashboard Kehadiran</h1>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-slate-500 text-sm">Hadir</p>
+            <p id="statHadir" class="text-3xl font-bold text-green-600">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-slate-500 text-sm">Sakit</p>
+            <p id="statSakit" class="text-3xl font-bold text-yellow-600">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-slate-500 text-sm">Izin</p>
+            <p id="statIzin" class="text-3xl font-bold text-blue-600">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-slate-500 text-sm">Alfa</p>
+            <p id="statAlfa" class="text-3xl font-bold text-red-600">0</p>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl border shadow-sm max-w-xl mx-auto">
+          <h2 class="text-lg font-bold mb-4">Persentase Kehadiran Total</h2>
+          <canvas id="attendanceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- SCANNER PAGE -->
+      <div id="page-scanner" class="page-content hidden space-y-6">
+        <h1 class="text-2xl font-bold">Scan QR Code Absensi</h1>
+        <div class="bg-white p-6 rounded-xl border shadow-sm max-w-lg mx-auto text-center space-y-4">
+          <div id="reader" class="w-full h-64 border rounded-lg overflow-hidden bg-slate-900"></div>
+          <div class="text-left space-y-2">
+            <label class="text-sm font-semibold">Status Absensi:</label>
+            <select id="scanStatus" class="w-full p-2 border rounded-lg">
+              <option value="Hadir">Hadir</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Izin">Izin</option>
+              <option value="Alfa">Alfa</option>
+            </select>
+          </div>
+          <p id="scanResult" class="text-sm font-medium text-indigo-600"></p>
+        </div>
+      </div>
+
+      <!-- 2. REKAP / EDIT ABSENSI PAGE -->
+      <div id="page-absensi" class="page-content hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <h1 class="text-2xl font-bold">Data Absensi Siswa</h1>
+          <button onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf"></i> Export PDF
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-100 border-b">
+              <tr>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">NISN</th>
+                <th class="p-3">Nama</th>
+                <th class="p-3">Kelas</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableAbsensi"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. KELOLA SISWA PAGE -->
+      <div id="page-siswa" class="page-content hidden space-y-6">
+        <h1 class="text-2xl font-bold">Kelola Data Siswa</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <h2 class="text-lg font-bold">Tambah Siswa</h2>
+            <form id="formSiswa" class="space-y-3">
+              <input type="text" id="addNisn" placeholder="NISN" class="w-full p-2 border rounded-lg" required>
+              <input type="text" id="addNama" placeholder="Nama Lengkap" class="w-full p-2 border rounded-lg" required>
+              <input type="text" id="addKelas" placeholder="Kelas (misal: X IPA 1)" class="w-full p-2 border rounded-lg" required>
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold w-full">Tambah</button>
+            </form>
+          </div>
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <h2 class="text-lg font-bold">Import dari Excel</h2>
+            <input type="file" id="excelInput" accept=".xlsx, .xls" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700">
+            <p class="text-xs text-slate-400">Format Excel: Kolom A = NISN, Kolom B = Nama, Kolom C = Kelas (Dimulai dari Baris 2)</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-100 border-b">
+              <tr>
+                <th class="p-3">NISN</th>
+                <th class="p-3">Nama</th>
+                <th class="p-3">Kelas</th>
+              </tr>
+            </thead>
+            <tbody id="tableSiswa"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. BARCODE SISWA PAGE -->
+      <div id="page-qrgenerator" class="page-content hidden space-y-6">
+        <h1 class="text-2xl font-bold">Generate QR Code Siswa</h1>
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-md">
+          <select id="selectSiswaQr" onchange="generateQrCode()" class="w-full p-2 border rounded-lg">
+            <option value="">-- Pilih Siswa --</option>
+          </select>
+          <div id="qrcodeContainer" class="flex justify-center p-4 border rounded-lg bg-slate-50 min-h-[150px] items-center"></div>
+        </div>
+      </div>
+
+      <!-- 6. MATERI PAGE -->
+      <div id="page-materi" class="page-content hidden space-y-6">
+        <h1 class="text-2xl font-bold">Materi Pembelajaran</h1>
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-md">
+          <h2 class="text-lg font-bold">Tambah Materi Baru</h2>
+          <form id="formMateri" class="space-y-3">
+            <input type="text" id="materiJudul" placeholder="Judul Materi" class="w-full p-2 border rounded-lg" required>
+            <textarea id="materiDeskripsi" placeholder="Deskripsi Singkat" class="w-full p-2 border rounded-lg" required></textarea>
+            <input type="url" id="materiLink" placeholder="Link (Drive/PDF/Video)" class="w-full p-2 border rounded-lg" required>
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold w-full">Simpan Materi</button>
+          </form>
+        </div>
+        <div id="materiList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- 7. NILAI PAGE -->
+      <div id="page-nilai" class="page-content hidden space-y-6">
+        <h1 class="text-2xl font-bold">Nilai Siswa (Informatika)</h1>
+        <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-100 border-b">
+              <tr>
+                <th class="p-3">Nama</th>
+                <th class="p-3">Kelas</th>
+                <th class="p-3">UH 1</th>
+                <th class="p-3">UH 2</th>
+                <th class="p-3">UH 3</th>
+                <th class="p-3">UTS</th>
+                <th class="p-3">UAS</th>
+                <th class="p-3">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableNilai"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // MASUKKAN URL DEPLOYMENT APPS SCRIPT ANDA DI SINI
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQ6IhV3yM7CJE62IIV2Psat5uVjz-jk-TW-fz2bDEeF7eBpVU9IC6uKDgz4PkA0N74Zg/exec";
+
+    let html5QrcodeScanner = null;
+    let chartInstance = null;
+
+    // LOGIN FUNCTION
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const u = document.getElementById("username").value;
+      const p = document.getElementById("password").value;
+
+      fetch(`${WEB_APP_URL}?action=login&username=${u}&password=${p}`)
+        .then(res => res.json())
+        .then(res => {
+          if(res.status === "success") {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("appSection").classList.remove("hidden");
+            loadAllData();
+          } else {
+            alert(res.message);
+          }
+        }).catch(() => {
+          // Fallback demo login jika URL script belum dikonfigurasi
+          if(u === "guru" && p === "admin123") {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("appSection").classList.remove("hidden");
+          } else {
+            alert("Username atau Password Salah!");
+          }
+        });
+    });
+
+    function logout() {
+      location.reload();
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll(".page-content").forEach(el => el.classList.add("hidden"));
+      document.getElementById(`page-${pageId}`).classList.remove("hidden");
+      
+      if(pageId === "scanner") startScanner();
+      else stopScanner();
+    }
+
+    function startScanner() {
+      if(!html5QrcodeScanner) {
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render((decodedText) => {
+          const status = document.getElementById("scanStatus").value;
+          fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "scanAbsen", nisn: decodedText, status: status })
+          }).then(res => res.json()).then(res => {
+            document.getElementById("scanResult").innerText = res.message;
+            loadAbsensi();
+          });
+        });
+      }
+    }
+
+    function stopScanner() {
+      if(html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(() => {});
+        html5QrcodeScanner = null;
+      }
+    }
+
+    // LOAD DATA
+    function loadAllData() {
+      loadSiswa();
+      loadAbsensi();
+      loadNilai();
+      loadMateri();
+    }
+
+    function loadSiswa() {
+      fetch(`${WEB_APP_URL}?action=getSiswa`)
+        .then(res => res.json())
+        .then(res => {
+          const tbody = document.getElementById("tableSiswa");
+          const selectQr = document.getElementById("selectSiswaQr");
+          tbody.innerHTML = "";
+          selectQr.innerHTML = `<option value="">-- Pilih Siswa --</option>`;
+          
+          if(res.data) {
+            res.data.forEach(s => {
+              tbody.innerHTML += `<tr class="border-b"><td class="p-3">${s[0]}</td><td class="p-3">${s[1]}</td><td class="p-3">${s[2]}</td></tr>`;
+              selectQr.innerHTML += `<option value="${s[0]}">${s[1]} (${s[2]})</option>`;
+            });
+          }
+        });
+    }
+
+    function loadAbsensi() {
+      fetch(`${WEB_APP_URL}?action=getAbsensi`)
+        .then(res => res.json())
+        .then(res => {
+          const tbody = document.getElementById("tableAbsensi");
+          tbody.innerHTML = "";
+          let counts = { Hadir: 0, Sakit: 0, Izin: 0, Alfa: 0 };
+
+          if(res.data) {
+            res.data.forEach(a => {
+              counts[a[5]] = (counts[a[5]] || 0) + 1;
+              tbody.innerHTML += `
+                <tr class="border-b">
+                  <td class="p-3">${a[1]}</td>
+                  <td class="p-3">${a[2]}</td>
+                  <td class="p-3">${a[3]}</td>
+                  <td class="p-3">${a[4]}</td>
+                  <td class="p-3 font-semibold">${a[5]}</td>
+                  <td class="p-3">
+                    <select onchange="updateAbsensiStatus('${a[0]}', this.value)" class="text-xs p-1 border rounded">
+                      <option value="Hadir" ${a[5] === 'Hadir'?'selected':''}>Hadir</option>
+                      <option value="Sakit" ${a[5] === 'Sakit'?'selected':''}>Sakit</option>
+                      <option value="Izin" ${a[5] === 'Izin'?'selected':''}>Izin</option>
+                      <option value="Alfa" ${a[5] === 'Alfa'?'selected':''}>Alfa</option>
+                    </select>
+                  </td>
+                </tr>`;
+            });
+          }
+          
+          document.getElementById("statHadir").innerText = counts.Hadir;
+          document.getElementById("statSakit").innerText = counts.Sakit;
+          document.getElementById("statIzin").innerText = counts.Izin;
+          document.getElementById("statAlfa").innerText = counts.Alfa;
+          
+          renderChart(counts);
+        });
+    }
+
+    function updateAbsensiStatus(id, status) {
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "updateAbsensi", id: id, status: status })
+      }).then(() => loadAbsensi());
+    }
+
+    function renderChart(counts) {
+      const ctx = document.getElementById('attendanceChart').getContext('2d');
+      if(chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Hadir', 'Sakit', 'Izin', 'Alfa'],
+          datasets: [{
+            data: [counts.Hadir, counts.Sakit, counts.Izin, counts.Alfa],
+            backgroundColor: ['#16a34a', '#ca8a04', '#2563eb', '#dc2626']
+          }]
+        }
+      });
+    }
+
+    // EXCEL IMPORT & PDF EXPORT
+    document.getElementById("excelInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        json.shift(); // remove header
+        
+        const listSiswa = json.map(r => ({ nisn: r[0], nama: r[1], kelas: r[2] }));
+        fetch(WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "importSiswaBatch", listSiswa: listSiswa })
+        }).then(() => loadSiswa());
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Rekap Absensi Informatika", 14, 15);
+      doc.autoTable({ html: '#tableAbsensi' });
+      doc.save("rekap_absensi.pdf");
+    }
+
+    // QR CODE GENERATOR
+    function generateQrCode() {
+      const nisn = document.getElementById("selectSiswaQr").value;
+      const container = document.getElementById("qrcodeContainer");
+      container.innerHTML = "";
+      if(nisn) {
+        new QRCode(container, { text: nisn.toString(), width: 128, height: 128 });
+      }
+    }
+
+    // MATERI MANAGEMENT
+    document.getElementById("formMateri").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const judul = document.getElementById("materiJudul").value;
+      const deskripsi = document.getElementById("materiDeskripsi").value;
+      const link = document.getElementById("materiLink").value;
+
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addMateri", judul, deskripsi, link })
+      }).then(() => loadMateri());
+    });
+
+    function loadMateri() {
+      fetch(`${WEB_APP_URL}?action=getMateri`)
+        .then(res => res.json())
+        .then(res => {
+          const list = document.getElementById("materiList");
+          list.innerHTML = "";
+          if(res.data) {
+            res.data.forEach(m => {
+              list.innerHTML += `
+                <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
+                  <h3 class="font-bold text-lg text-indigo-600">${m[1]}</h3>
+                  <p class="text-sm text-slate-600">${m[2]}</p>
+                  <a href="${m[3]}" target="_blank" class="inline-block text-xs bg-slate-100 p-2 rounded text-indigo-500 font-semibold">Buka Link Materi →</a>
+                </div>`;
+            });
+          }
+        });
+    }
+
+    // NILAI MANAGEMENT
+    function loadNilai() {
+      fetch(`${WEB_APP_URL}?action=getNilai`)
+        .then(res => res.json())
+        .then(res => {
+          const tbody = document.getElementById("tableNilai");
+          tbody.innerHTML = "";
+          if(res.data) {
+            res.data.forEach(n => {
+              tbody.innerHTML += `
+                <tr class="border-b" id="nilai-row-${n[0]}">
+                  <td class="p-3">${n[1]}</td>
+                  <td class="p-3">${n[2]}</td>
+                  <td class="p-3"><input type="number" value="${n[3]||0}" class="w-12 border rounded px-1" id="uh1-${n[0]}"></td>
+                  <td class="p-3"><input type="number" value="${n[4]||0}" class="w-12 border rounded px-1" id="uh2-${n[0]}"></td>
+                  <td class="p-3"><input type="number" value="${n[5]||0}" class="w-12 border rounded px-1" id="uh3-${n[0]}"></td>
+                  <td class="p-3"><input type="number" value="${n[6]||0}" class="w-12 border rounded px-1" id="uts-${n[0]}"></td>
+                  <td class="p-3"><input type="number" value="${n[7]||0}" class="w-12 border rounded px-1" id="uas-${n[0]}"></td>
+                  <td class="p-3">
+                    <button onclick="saveNilai('${n[0]}', '${n[1]}', '${n[2]}')" class="bg-green-600 text-white text-xs px-2 py-1 rounded">Simpan</button>
+                  </td>
+                </tr>`;
+            });
+          }
+        });
+    }
+
+    function saveNilai(nisn, nama, kelas) {
+      const payload = {
+        action: "saveNilai",
+        nisn: nisn,
+        nama: nama,
+        kelas: kelas,
+        uh1: document.getElementById(`uh1-${nisn}`).value,
+        uh2: document.getElementById(`uh2-${nisn}`).value,
+        uh3: document.getElementById(`uh3-${nisn}`).value,
+        uts: document.getElementById(`uts-${nisn}`).value,
+        uas: document.getElementById(`uas-${nisn}`).value
+      };
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      }).then(() => alert("Nilai berhasil disimpan!"));
+    }
+  </script>
+</body>
+</html>
